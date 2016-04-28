@@ -1,8 +1,9 @@
 import numpy as np
 import numpy.linalg as LA
 import math
-
-
+import datetime
+import pandas as pd
+import matplotlib.pyplot as plt
 
 def readData():
     """
@@ -17,12 +18,15 @@ def readData():
     movie_list = []
     for line in infile:
         fields = line.strip().split()
-        print fields[0],fields[1],fields[2],fields[3]
+        #print fields[0],fields[1],fields[2],fields[3]
         user = int(fields[0])
         movie = int(fields[1])
         rating = float(fields[2])
         time_stamp = int(fields[3])
-
+        """
+        if user == 4:
+            print datetime.datetime.fromtimestamp(time_stamp).strftime('%Y-%m-%d %H:%M:%S')
+        """
         if user not in user_dict:
             user_dict[user] = {}
             user_dict[user][movie] = rating
@@ -41,8 +45,8 @@ def readData():
     n = len(movie_dict)
     user_list.sort()
     movie_list.sort()
-    print user_list[-1], l
-    print movie_list[-1], n
+    #print user_list[-1], l
+    #print movie_list[-1], n
     return  movie_dict, user_dict, n, l
 
 
@@ -142,13 +146,26 @@ def Update_g(A_dict,f,g,n,l,r):
 
 
 
+def plotResult(R_dict,n,l):
+
+    plt.axis([0,n+1,0,1])
+    for movie in R_dict:
+        user_list = []
+        movie_list = []
+        for user in R_dict[movie]:
+            if R_dict[movie][user] != 0.0:
+                user_list.append(user)
+                movie_list.append(movie)
+        plt.plot(user_list, movie_list, "b.")
+    plt.savefig("R.png")
+
+
 if __name__ == "__main__": 
     movie_dict, user_dict, n, l = readData() 
     r = 3
     F, G = initialization(n,l,r)
     F, G, R_dict = AltQPInc(movie_dict, user_dict, F,G, n, l, r)
-    print "F",F
-    print "G",G
-    print "R_dict", R_dict    
-
-
+    #print "F",F
+    #print "G",G
+    #print "R_dict", R_dict    
+    plotResult(R_dict, n,l)
