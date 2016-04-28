@@ -2,8 +2,9 @@ import numpy as np
 import numpy.linalg as LA
 import math
 import datetime
-import pandas as pd
 import matplotlib.pyplot as plt
+import random
+
 
 def readData():
     """
@@ -86,24 +87,32 @@ def RankOneApproximation(movie_dict,user_dict,n,l,r):
     output: a colunmn vector f (movie feature), and a row vector g (user feature)
     """
     convergent = False
-    f = np.array([0.1]*n)
+    f = []
+    g = []
+    for i in range(n):
+        f.append(random.randint(-30,30)/10.0)
+    for j in range(l):
+        g.append(random.randint(-30,30)/10.0)
+    f = np.array(f)
     f = f.T
-    g = np.array([0.1]*l) 
-    print "f",f
-    print "g",g
+    g = np.array(g)
+    #print "f",f
+    #print "g",g
     product = np.outer(f,g)
-    print "product",product
+    #print "product",product
     while convergent == False:
         g = Update_g(movie_dict,f,g,n,l,r)
-        print "g",g
+        #print "g",g
         f_hat = Update_g(user_dict,g.T,f.T,l,n,r)  #note the order of parameters n and l
         f = f_hat.T
-        print "f",f
+        #print "f",f
         product_next = np.outer(f,g)
         error = LA.norm(product_next - product)
-        print "error",error
-        print "product_next",product_next
-        if error > 10.0:
+        norm = LA.norm(product_next)
+        print "norm",norm
+        #print "error",error
+        #print "product_next",product_next
+        if error > 10000.0:
             product = product_next
         else:
             convergent = True
@@ -148,24 +157,27 @@ def Update_g(A_dict,f,g,n,l,r):
 
 def plotResult(R_dict,n,l):
 
-    plt.axis([0,n+1,0,1])
+    plt.axis([0,l+1,0,n+1])
+    count = 0
     for movie in R_dict:
         user_list = []
         movie_list = []
         for user in R_dict[movie]:
-            if R_dict[movie][user] != 0.0:
+            if R_dict[movie][user] > 0:
+                count += 1
                 user_list.append(user)
                 movie_list.append(movie)
         plt.plot(user_list, movie_list, "b.")
     plt.savefig("R.png")
+    print count
 
 
 if __name__ == "__main__": 
     movie_dict, user_dict, n, l = readData() 
-    r = 3
+    r = 10
     F, G = initialization(n,l,r)
     F, G, R_dict = AltQPInc(movie_dict, user_dict, F,G, n, l, r)
     #print "F",F
     #print "G",G
-    #print "R_dict", R_dict    
+    print "R_dict", R_dict    
     plotResult(R_dict, n,l)
