@@ -70,15 +70,17 @@ def AltQPInc(movie_dict,user_dict, F,G,n,l,r):
     input: original n*l matrix A (here we use A_dict to represent matrix), and rank size r
     output: n*r matrix F, r*l matrix G, and an n*l matrix R
     """ 
-    R_dict =  movie_dict #residual matrix initialized as a dict due to sparsity
+    #R_dict =  movie_dict #residual matrix initialized as a dict due to sparsity
     for k in range(r):
-        f, g = RankOneApproximation(R_dict, user_dict,n,l,r)
+        f, g = RankOneApproximation(movie_dict, user_dict,n,l,r)
         F[:,k] = f
         G[k,:] = g
         for movie in movie_dict:
             for user in movie_dict[movie]:
-                R_dict[movie][user] = R_dict[movie][user] - f[movie-1]*g[user-1]
-    return F, G, R_dict
+                if movie_dict[movie][user] > 0.0:
+                    movie_dict[movie][user] = movie_dict[movie][user] - f[movie-1]*g[user-1]
+                    user_dict[user][movie] = user_dict[user][movie] - f[movie-1]*g[user-1]
+    return F, G, movie_dict, user_dict
    
 
 def RankOneApproximation(movie_dict,user_dict,n,l,r):
@@ -90,9 +92,9 @@ def RankOneApproximation(movie_dict,user_dict,n,l,r):
     f = []
     g = []
     for i in range(n):
-        f.append(random.randint(-30,30)/10.0)
+        f.append(random.randint(-5,5)/1.0)
     for j in range(l):
-        g.append(random.randint(-30,30)/10.0)
+        g.append(random.randint(-5,5)/1.0)
     f = np.array(f)
     f = f.T
     g = np.array(g)
@@ -101,18 +103,33 @@ def RankOneApproximation(movie_dict,user_dict,n,l,r):
     product = np.outer(f,g)
     #print "product",product
     while convergent == False:
+        total_error = 0.0
         g = Update_g(movie_dict,f,g,n,l,r)
-        #print "g",g
+        #print "update-g",g
         f_hat = Update_g(user_dict,g.T,f.T,l,n,r)  #note the order of parameters n and l
         f = f_hat.T
-        #print "f",f
+        #print "update-f",f
         product_next = np.outer(f,g)
+        """
         error = LA.norm(product_next - product)
         norm = LA.norm(product_next)
-        print "norm",norm
-        #print "error",error
+        """
+        for movie in movie_dict:
+            for user in movie_dict[movie]:
+                rating = movie_dict[movie][user]
+                if rating > 0.0:
+                    error = product_next[movie-1][user-1] - rating 
+                    if error > 0.0:
+                        print "OMGGGGGGGGGGGGGGG, SOMTHING WRONG"
+                    elif error == 0.0:
+                        print "gooooooooooooooooooooooood"
+                    else:
+                        total_error += math.pow(error,2)
+        #print "norm",norm
+        total_error = math.sqrt(total_error)
+        print "total_error",total_error
         #print "product_next",product_next
-        if error > 10000.0:
+        if total_error > 1000.0:
             product = product_next
         else:
             convergent = True
@@ -128,23 +145,25 @@ def Update_g(A_dict,f,g,n,l,r):
     for j in range(l):
         low = float("-inf")
         up = float("inf")
-        t = 0
-        q = 0
+        t = 0.0
+        q = 0.0
         for movie in A_dict:
             user = j+1
             if user in A_dict[movie]:
-                q = q + f[movie-1] * A_dict[movie][user]
-                t = t + math.pow(f[movie-1],2)
-                if f[movie-1] > 0:
-                    up = min(up, A_dict[movie][user]/f[movie-1]) 
-                elif f[movie-1] < 0:
-                    low = max(low, A_dict[movie][user]/f[movie-1])
-                else:
-                    continue
+                if A_dict[movie][user] > 0.0:
+                    q = q + f[movie-1] * A_dict[movie][user]
+                    t = t + math.pow(f[movie-1],2)
+                    #print f[movie-1]
+                    if f[movie-1] > 0:
+                        up = min(up, A_dict[movie][user]/f[movie-1]) 
+                    elif f[movie-1] < 0:
+                        low = max(low, A_dict[movie][user]/f[movie-1])
+                    else:
+                        continue
         if t == 0:
-            g[j] = 0 
+            g[j] = 0.0 
             continue
-        q = q /t
+        q = q / t
         if q <= up and q >= low:
             g[j] = q
         elif q > up:
@@ -174,10 +193,10 @@ def plotResult(R_dict,n,l):
 
 if __name__ == "__main__": 
     movie_dict, user_dict, n, l = readData() 
-    r = 10
+    r = 1
     F, G = initialization(n,l,r)
-    F, G, R_dict = AltQPInc(movie_dict, user_dict, F,G, n, l, r)
+    F, G, R_dict, user_dict = AltQPInc(movie_dict, user_dict, F,G, n, l, r)
     #print "F",F
     #print "G",G
-    print "R_dict", R_dict    
+    #print "R_dict", R_dict    
     plotResult(R_dict, n,l)
