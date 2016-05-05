@@ -30,22 +30,53 @@ def readData():
         """
         if user not in user_dict:
             user_dict[user] = {}
-            user_dict[user][movie] = rating
+            #user_dict[user][movie] = rating
+            user_dict[user][movie] = 1
             user_list.append(user)
         else:
-            user_dict[user][movie] = rating
+            user_dict[user][movie] = 1
+            #user_dict[user][movie] = rating
 
         if movie not in movie_dict:
             movie_dict[movie] = {}
-            movie_dict[movie][user] = rating
+            movie_dict[movie][user] = 1
+            #movie_dict[movie][user] = rating
             movie_list.append(movie)
         else:
-            movie_dict[movie][user] = rating
+            #movie_dict[movie][user] = rating
+            movie_dict[movie][user] = 1
     infile.close() 
+
+    infile2 = open("test.data","r")
+    for line in infile2:
+        fields = line.strip().split()
+        user = int(fields[0])
+        movie = int(fields[1])
+        rating = float(fields[2])
+        if user not in user_dict:
+            user_dict[user] = {}
+            #user_dict[user][movie] = rating
+            user_dict[user][movie] = 1
+            user_list.append(user)
+        else:
+            #user_dict[user][movie] = rating
+            user_dict[user][movie] = 1
+        if movie not in movie_dict:
+            movie_dict[movie] = {}
+            #movie_dict[movie][user] = rating
+            movie_dict[movie][user] = 1
+            movie_list.append(movie)
+        else:
+            #movie_dict[movie][user] = rating  
+            movie_dict[movie][user] = 1
+    infile2.close() 
+
     l = len(user_dict)
     n = len(movie_dict)
     user_list.sort()
     movie_list.sort()
+    print user_list
+    print movie_list
     #print user_list[-1], l
     #print movie_list[-1], n
     return  movie_dict, user_dict, n, l
@@ -120,20 +151,20 @@ def RankOneApproximation(movie_dict,user_dict,n,l,r):
                 if rating > 0.0:
                     error = product_next[movie-1][user-1] - rating 
                     if error > 0.0:
-                        print "OMGGGGGGGGGGGGGGG, SOMTHING WRONG"
+                        abc= "OMGGGGGGGGGGGGGGG, SOMTHING WRONG"
                     elif error == 0.0:
-                        print "gooooooooooooooooooooooood"
+                        abc= "gooooooooooooooooooooooood"
                     else:
                         total_error += math.pow(error,2)
         #print "norm",norm
         total_error = math.sqrt(total_error)
-        print "total_error",total_error
+        #print "total_error",total_error
         #print "product_next",product_next
         if total_error > 1000.0:
             product = product_next
         else:
             convergent = True
-            print "convergent------------------------------------------------------------"
+            #print "convergent------------------------------------------------------------"
     return f, g
 
 
@@ -187,16 +218,16 @@ def plotResult(R_dict,n,l):
                 user_list.append(user)
                 movie_list.append(movie)
         plt.plot(user_list, movie_list, "b.")
-    plt.savefig("R.png")
+    plt.savefig("R100.png")
     print count
 
 
 if __name__ == "__main__": 
     movie_dict, user_dict, n, l = readData() 
-    r = 1
+    r = 100
     F, G = initialization(n,l,r)
     F, G, R_dict, user_dict = AltQPInc(movie_dict, user_dict, F,G, n, l, r)
-    #print "F",F
-    #print "G",G
-    #print "R_dict", R_dict    
+    print "F",F
+    print "G",G
+    print "R_dict", R_dict    
     plotResult(R_dict, n,l)
