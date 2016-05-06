@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import random
 
 
+
+
 def readData():
     """
     read data into two dictionaries: movie_dict and user_dict 
@@ -19,32 +21,27 @@ def readData():
     movie_list = []
     for line in infile:
         fields = line.strip().split()
-        #print fields[0],fields[1],fields[2],fields[3]
         user = int(fields[0])
         movie = int(fields[1])
         rating = float(fields[2])
         time_stamp = int(fields[3])
-        """
-        if user == 4:
-            print datetime.datetime.fromtimestamp(time_stamp).strftime('%Y-%m-%d %H:%M:%S')
-        """
         if user not in user_dict:
             user_dict[user] = {}
-            #user_dict[user][movie] = rating
-            user_dict[user][movie] = 1
+            user_dict[user][movie] = rating
+            #user_dict[user][movie] = 1
             user_list.append(user)
         else:
-            user_dict[user][movie] = 1
-            #user_dict[user][movie] = rating
+            #user_dict[user][movie] = 1
+            user_dict[user][movie] = rating
 
         if movie not in movie_dict:
             movie_dict[movie] = {}
-            movie_dict[movie][user] = 1
-            #movie_dict[movie][user] = rating
+            #movie_dict[movie][user] = 1
+            movie_dict[movie][user] = rating
             movie_list.append(movie)
         else:
-            #movie_dict[movie][user] = rating
-            movie_dict[movie][user] = 1
+            movie_dict[movie][user] = rating
+            #movie_dict[movie][user] = 1
     infile.close() 
 
     infile2 = open("test.data","r")
@@ -55,20 +52,20 @@ def readData():
         rating = float(fields[2])
         if user not in user_dict:
             user_dict[user] = {}
-            #user_dict[user][movie] = rating
-            user_dict[user][movie] = 1
+            user_dict[user][movie] = rating
+            #user_dict[user][movie] = 1
             user_list.append(user)
         else:
-            #user_dict[user][movie] = rating
-            user_dict[user][movie] = 1
+            user_dict[user][movie] = rating
+            #user_dict[user][movie] = 1
         if movie not in movie_dict:
             movie_dict[movie] = {}
-            #movie_dict[movie][user] = rating
-            movie_dict[movie][user] = 1
+            movie_dict[movie][user] = rating
+            #movie_dict[movie][user] = 1
             movie_list.append(movie)
         else:
-            #movie_dict[movie][user] = rating  
-            movie_dict[movie][user] = 1
+            movie_dict[movie][user] = rating  
+            #movie_dict[movie][user] = 1
     infile2.close() 
 
     l = len(user_dict)
@@ -80,6 +77,60 @@ def readData():
     #print user_list[-1], l
     #print movie_list[-1], n
     return  movie_dict, user_dict, n, l
+
+
+
+
+def readData2():
+    infile = open("citation/Cit-HepTh.txt")
+    for i in range(4):
+        infile.readline()
+    from_node_dict = {}
+    to_node_dict = {}
+    node_dict = {}
+    for line in infile:
+        fields = line.strip().split()
+        from_node = int(fields[0])
+        to_node = int(fields[1])
+        if from_node not in from_node_dict:
+            from_node_dict[from_node] = {}
+            from_node_dict[from_node][to_node] = 1
+        else:
+            from_node_dict[from_node][to_node] = 1
+
+        ##to_node_dict = movie_dict
+        if to_node not in to_node_dict:
+            to_node_dict[to_node] = {}
+            to_node_dict[to_node][from_node] = 1
+        else:
+            to_node_dict[to_node][from_node] = 1
+        
+        id = 0
+        if from_node not in node_dict:
+            id += 1
+            node_dict[from_node] = id
+        if to_node not in node_dict:
+            id += 1
+            node_dict[to_node] = id
+
+    print len(from_node_dict)
+    print len(to_node_dict)
+    n =  len(node_dict)
+    l =  len(node_dict)
+
+    infile.close() 
+      
+    return to_node_dict, from_node_dict, n, l
+
+
+
+
+
+
+
+
+
+
 
 
 def initialization(n,l,r):
@@ -213,21 +264,23 @@ def plotResult(R_dict,n,l):
         user_list = []
         movie_list = []
         for user in R_dict[movie]:
-            if R_dict[movie][user] > 0:
+            if R_dict[movie][user] > 0.00001:
                 count += 1
                 user_list.append(user)
                 movie_list.append(movie)
         plt.plot(user_list, movie_list, "b.")
-    plt.savefig("R100.png")
+    plt.savefig("origin.png")
     print count
 
 
 if __name__ == "__main__": 
-    movie_dict, user_dict, n, l = readData() 
-    r = 100
+    movie_dict, user_dict, n, l = readData2() 
+    """
+    r = 10
     F, G = initialization(n,l,r)
     F, G, R_dict, user_dict = AltQPInc(movie_dict, user_dict, F,G, n, l, r)
     print "F",F
     print "G",G
     print "R_dict", R_dict    
-    plotResult(R_dict, n,l)
+    """
+    plotResult(user_dict, n,l)
